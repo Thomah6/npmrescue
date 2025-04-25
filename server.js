@@ -7,6 +7,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import fs from "fs";
 import fetch from "node-fetch"; // Ensure this is installed for API calls
+const multer = require('multer');
 
 // Firebase configuration (hardcoded for now)
 const firebaseConfig = {
@@ -24,11 +25,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
 const app = express();
-const DATA_DIR = path.resolve("./data");
-const MAX_FILE_SIZE = 1024 * 1024; // 1MB max
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Pour parser les body en JSON (important pour les POST)
 app.use(express.json());
@@ -59,6 +56,9 @@ async function verifyUserWithEmailAndPassword(email, password) {
     return await response.json();
 }
 
+// Configurer multer pour gérer multipart/form-data
+const upload = multer({ storage: multer.memoryStorage() });
+
 // Serve les fichiers statiques (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -68,7 +68,7 @@ app.get("/api/sdk", (req, res) => {
 });
 
 // Route POST
-app.post("/api/sdk", async (req, res) => {
+app.post("/api/sdk", upload.fields([{ name: 'context' }, { name: 'message' }]), async (req, res) => {
     try {
         const email = req.headers["x-npmrescue-email"];
         const pass = req.headers["x-npmrescue-pass"];
@@ -79,36 +79,23 @@ app.post("/api/sdk", async (req, res) => {
             return res.status(401).json({ error: "Email ou mot de passe incorrect" });
         }
 
-        // Parse request body
-        // Utilisez .toLowerCase() pour éviter les soucis de casse dans l'en-tête
-        const contentType = (req.headers["content-type"] || "").toLowerCase();
-        let context = null;
-        let message = null;
+       
+         // Récupérer context et message du form-data
+    const context = req.body.context || (req.files && req.files.context ? req.files.context[0].buffer.toString() : null);
+    const message = req.body.message || (req.files && req.files.message ? req.files.message[0].buffer.toString() : null);
 
-        // Accepte aussi bien "application/x-www-form-urlencoded" que "application/x-www-form-urlencoded; charset=utf-8"
-        if (contentType.startsWith("application/x-www-form-urlencoded")) {
-            if (typeof req.body.context === "string") {
-                try {
-                    context = JSON.parse(req.body.context);
-                } catch (e) {
-                    return res.status(400).json({ error: "Le champ context doit être un JSON stringifié valide." });
-                }
-            }
-            
-        } else if (contentType.startsWith("application/json")) {
-            if (typeof req.body.context === "string") {
-                try {
-                    context = JSON.parse(req.body.context);
-                } catch (e) {
-                    return res.status(400).json({ error: "Le champ context doit être un JSON stringifié valide." });
-                }
-            } else if (typeof req.body.context === "object") {
-                context = req.body.context;
-            }
-            
-        } else {
-            return res.status(415).json({ error: "Format non supporté" });
-        }
+    if (!context) {
+      return res.status(400).json({ error: 'Context is required' });
+    }
+
+    // Parser context si c'est une chaîne JSON
+    let parsedContext;
+    try {
+      parsedContext = JSON.parse(context);
+    } catch (error) {
+      return res.status(400).json({ error: 'Invalid context format, must be valid JSON' });
+    }
+
 
         // Handle x-npmrescue-request header
         const buglixRequest = req.headers["x-npmrescue-request"];
