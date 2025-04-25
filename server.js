@@ -7,7 +7,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import fs from "fs";
 import fetch from "node-fetch"; // Ensure this is installed for API calls
-const multer = require('multer');
+import multer from "multer";
 
 // Firebase configuration (hardcoded for now)
 const firebaseConfig = {
