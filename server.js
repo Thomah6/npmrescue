@@ -62,12 +62,12 @@ async function verifyUserWithEmailAndPassword(email, password) {
 app.use(express.static(path.join(__dirname, "public")));
 
 // Route GET
-app.get("/api/mon-endpoint", (req, res) => {
+app.get("/api/sdk", (req, res) => {
     res.json({ message: "Hello from my API!" });
 });
 
 // Route POST
-app.post("/api/mon-endpoint", async (req, res) => {
+app.post("/api/sdk", async (req, res) => {
     try {
         const email = req.headers["x-buglix-email"];
         const pass = req.headers["x-buglix-pass"];
