@@ -32,7 +32,8 @@ const __dirname = dirname(__filename);
 
 // Pour parser les body en JSON (important pour les POST)
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false })); // Remplacez { extended: true } par false pour compatibilité totale avec qs.stringify
+
 // Helper function to clean AI response
 const cleanAIResponse = (response) => {
     return response.replace(/<\/?[^>]+(>|$)/g, "").trim(); // Remove HTML tags and trim
@@ -79,11 +80,13 @@ app.post("/api/sdk", async (req, res) => {
         }
 
         // Parse request body
-        const contentType = req.headers["content-type"] || "";
+        // Utilisez .toLowerCase() pour éviter les soucis de casse dans l'en-tête
+        const contentType = (req.headers["content-type"] || "").toLowerCase();
         let context = null;
         let message = null;
 
-        if (contentType.includes("application/x-www-form-urlencoded")) {
+        // Accepte aussi bien "application/x-www-form-urlencoded" que "application/x-www-form-urlencoded; charset=utf-8"
+        if (contentType.startsWith("application/x-www-form-urlencoded")) {
             if (typeof req.body.context === "string") {
                 try {
                     context = JSON.parse(req.body.context);
@@ -94,7 +97,7 @@ app.post("/api/sdk", async (req, res) => {
             if (typeof req.body.message === "string") {
                 message = req.body.message;
             }
-        } else if (contentType.includes("application/json")) {
+        } else if (contentType.startsWith("application/json")) {
             if (typeof req.body.context === "string") {
                 try {
                     context = JSON.parse(req.body.context);
