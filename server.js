@@ -82,37 +82,23 @@ app.post("/api/sdk", async (req, res) => {
         // Parse request body
         // Utilisez .toLowerCase() pour éviter les soucis de casse dans l'en-tête
         const contentType = (req.headers["content-type"] || "").toLowerCase();
-        let context = null;
-        let message = null;
+        
+// Récupérer context et message du body
+const { context, message } = req.body;
 
-        // Accepte aussi bien "application/x-www-form-urlencoded" que "application/x-www-form-urlencoded; charset=utf-8"
-        if (contentType.startsWith("application/x-www-form-urlencoded")) {
-            if (typeof req.body.context === "string") {
-                try {
-                    context = JSON.parse(req.body.context);
-                } catch (e) {
-                    return res.status(400).json({ error: "Le champ context doit être un JSON stringifié valide." });
-                }
-            }
-            if (typeof req.body.message === "string") {
-                message = req.body.message;
-            }
-        } else if (contentType.startsWith("application/json")) {
-            if (typeof req.body.context === "string") {
-                try {
-                    context = JSON.parse(req.body.context);
-                } catch (e) {
-                    return res.status(400).json({ error: "Le champ context doit être un JSON stringifié valide." });
-                }
-            } else if (typeof req.body.context === "object") {
-                context = req.body.context;
-            }
-            if (typeof req.body.message === "string") {
-                message = req.body.message;
-            }
-        } else {
-            return res.status(415).json({ error: "Format non supporté" });
-        }
+if (!context) {
+  return res.status(400).json({ error: 'Context is required' });
+}
+
+  // Parser context si c'est une chaîne JSON
+  let parsedContext;
+  try {
+    parsedContext = JSON.parse(context);
+  } catch (error) {
+    return res.status(400).json({ error: 'Invalid context format, must be valid JSON' });
+  }
+
+        
 
         // Handle x-npmrescue-request header
         const buglixRequest = req.headers["x-npmrescue-request"];
