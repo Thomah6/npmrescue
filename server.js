@@ -83,24 +83,11 @@ app.post("/api/sdk", async (req, res) => {
         let context = null;
         let message = null;
 
-        if (contentType.includes("application/json")) {
-            // body: { context: '...', message?: '...' }
-            if (typeof req.body.context === "string") {
-                context = JSON.parse(req.body.context);
-            } else if (typeof req.body.context === "object") {
-                context = req.body.context;
-            }
-            if (typeof req.body.message === "string") {
-                message = req.body.message;
-            }
-        } else if (contentType.includes("application/x-www-form-urlencoded")) {
+         if (contentType.includes("application/x-www-form-urlencoded")) {
             // body: context=...&message=...
-            if (typeof req.body.context === "string") {
                 context = JSON.parse(req.body.context);
-            }
-            if (typeof req.body.message === "string") {
                 message = req.body.message;
-            }
+            
         } else {
             return res.status(415).json({ error: "Format non supporté" });
         }
