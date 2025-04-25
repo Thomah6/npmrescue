@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import { dirname } from "path";
 import bodyParser from "body-parser";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
@@ -58,9 +57,6 @@ async function verifyUserWithEmailAndPassword(email, password) {
 
 // Configurer multer pour gérer multipart/form-data
 const upload = multer({ storage: multer.memoryStorage() });
-
-// Serve les fichiers statiques (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, "public")));
 
 // Route GET
 app.get("/api/sdk", (req, res) => {
