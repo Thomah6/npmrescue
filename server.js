@@ -69,8 +69,8 @@ app.get("/api/sdk", (req, res) => {
 // Route POST
 app.post("/api/sdk", async (req, res) => {
     try {
-        const email = req.headers["x-buglix-email"];
-        const pass = req.headers["x-buglix-pass"];
+        const email = req.headers["x-npmrescue-email"];
+        const pass = req.headers["x-npmrescue-pass"];
 
         // Vérifie l'utilisateur
         const user = await verifyUserWithEmailAndPassword(email, pass);
@@ -105,8 +105,8 @@ app.post("/api/sdk", async (req, res) => {
             return res.status(415).json({ error: "Format non supporté" });
         }
 
-        // Handle x-buglix-request header
-        const buglixRequest = req.headers["x-buglix-request"];
+        // Handle x-npmrescue-request header
+        const buglixRequest = req.headers["x-npmrescue-request"];
         if (buglixRequest === "init") {
             if (!user) {
                 return res
