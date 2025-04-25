@@ -79,15 +79,34 @@ app.post("/api/sdk", async (req, res) => {
         }
 
         // Parse request body
-        const contentType = req.headers["Content-Type"];
+        const contentType = req.headers["content-type"] || "";
         let context = null;
         let message = null;
 
-         if (contentType.includes("application/x-www-form-urlencoded")) {
-            // body: context=...&message=...
-                context = JSON.parse(req.body.context);
+        if (contentType.includes("application/x-www-form-urlencoded")) {
+            if (typeof req.body.context === "string") {
+                try {
+                    context = JSON.parse(req.body.context);
+                } catch (e) {
+                    return res.status(400).json({ error: "Le champ context doit être un JSON stringifié valide." });
+                }
+            }
+            if (typeof req.body.message === "string") {
                 message = req.body.message;
-            
+            }
+        } else if (contentType.includes("application/json")) {
+            if (typeof req.body.context === "string") {
+                try {
+                    context = JSON.parse(req.body.context);
+                } catch (e) {
+                    return res.status(400).json({ error: "Le champ context doit être un JSON stringifié valide." });
+                }
+            } else if (typeof req.body.context === "object") {
+                context = req.body.context;
+            }
+            if (typeof req.body.message === "string") {
+                message = req.body.message;
+            }
         } else {
             return res.status(415).json({ error: "Format non supporté" });
         }
@@ -102,13 +121,7 @@ app.post("/api/sdk", async (req, res) => {
             } else {
                 return res.status(200).json({ success: "Correct" });
             }
-        } else if (buglixRequest === "analyze") {
-            if (!user) {
-                return res
-                    .status(401)
-                    .json({ error: "Email ou mot de passe incorrect" });
-            }
-
+        } else if (buglixRequest === "analyze" || buglixRequest === "chat") {
             if (!context) {
                 return res.status(400).json({ error: "Données vides ou non valides" });
             }
@@ -118,6 +131,7 @@ app.post("/api/sdk", async (req, res) => {
                 timestamp: new Date().toISOString(),
                 ip: req.ip,
                 context,
+                ...(message ? { message } : {})
             };
 
             // Prepare chat history
