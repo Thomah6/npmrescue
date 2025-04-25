@@ -79,7 +79,7 @@ app.post("/api/sdk", async (req, res) => {
         }
 
         // Parse request body
-        const contentType = req.headers["content-type"] || "";
+        const contentType = req.headers["Content-Type"];
         let context = null;
         let message = null;
 
